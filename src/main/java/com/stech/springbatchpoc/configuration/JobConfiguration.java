@@ -1,6 +1,7 @@
 package com.stech.springbatchpoc.configuration;
 
 
+import com.stech.springbatchpoc.reader.PaymentItemReader;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
@@ -11,6 +12,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Configuration
 @EnableBatchProcessing
 public class JobConfiguration {
@@ -20,6 +24,16 @@ public class JobConfiguration {
 
     @Autowired
     private StepBuilderFactory stepBuilderFactory;
+
+    @Bean
+    public PaymentItemReader paymentItemReader () {
+        List<String> subscriptions = new ArrayList<>(3);
+        subscriptions.add("111");
+        subscriptions.add("222");
+        subscriptions.add("333");
+        subscriptions.add("444");
+        return new PaymentItemReader(subscriptions);
+    }
 
     @Bean
     public Step step1 () {
@@ -58,11 +72,24 @@ public class JobConfiguration {
     }
 
     @Bean
+    public Step itemReaderStep () {
+        return stepBuilderFactory.get("itemReaderStep")
+                .<String, String>chunk(3)
+                .reader(paymentItemReader())
+                .writer(
+                        list -> {
+                            for (String curItem : list) {
+                                System.out.println(curItem);
+                            }
+                        }
+                )
+                .build();
+    }
+
+    @Bean
     public Job helloJob () {
         return jobBuilderFactory.get("test-batch")
-                .start(step1())
-                .on("COMPLETED").to(step2())
-                .from(step2()).on("COMPLETE").stopAndRestart(step4()).end()
+                .start(itemReaderStep())
                 .build();
     }
 }
