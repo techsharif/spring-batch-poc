@@ -1,18 +1,18 @@
 package com.stech.springbatchpoc.configuration;
 
 
-import com.stech.springbatchpoc.reader.PaymentItemReader;
+import com.stech.springbatchpoc.entity.Customer;
+import com.stech.springbatchpoc.reader.CustomerReader;
+import com.stech.springbatchpoc.repository.CustomerRepository;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
-import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Configuration
@@ -25,61 +25,25 @@ public class JobConfiguration {
     @Autowired
     private StepBuilderFactory stepBuilderFactory;
 
-    @Bean
-    public PaymentItemReader paymentItemReader () {
-        List<String> subscriptions = new ArrayList<>(3);
-        subscriptions.add("111");
-        subscriptions.add("222");
-        subscriptions.add("333");
-        subscriptions.add("444");
-        return new PaymentItemReader(subscriptions);
-    }
+    @Autowired
+    private CustomerRepository customerRepository;
 
     @Bean
-    public Step step1 () {
-        return stepBuilderFactory.get("step1")
-                .tasklet((stepContribution, chunkContext) -> {
-                    System.out.println("----------- Step 1 -----------------");
-                    return RepeatStatus.FINISHED;
-                }).build();
+    public CustomerReader customerReader () {
+        List<Customer> customers = customerRepository.findAll().subList(0, 10);
+        return new CustomerReader(customers);
     }
 
-    @Bean
-    public Step step2 () {
-        return stepBuilderFactory.get("step2")
-                .tasklet((stepContribution, chunkContext) -> {
-                    System.out.println("----------- Step 2 -----------------");
-                    return RepeatStatus.FINISHED;
-                }).build();
-    }
-
-    @Bean
-    public Step step3 () {
-        return stepBuilderFactory.get("step3")
-                .tasklet((stepContribution, chunkContext) -> {
-                    System.out.println("----------- Step 3 -----------------");
-                    return RepeatStatus.FINISHED;
-                }).build();
-    }
-
-    @Bean
-    public Step step4 () {
-        return stepBuilderFactory.get("step4")
-                .tasklet((stepContribution, chunkContext) -> {
-                    System.out.println("----------- Step 4 -----------------");
-                    return RepeatStatus.FINISHED;
-                }).build();
-    }
 
     @Bean
     public Step itemReaderStep () {
         return stepBuilderFactory.get("itemReaderStep")
-                .<String, String>chunk(3)
-                .reader(paymentItemReader())
+                .<Customer, Customer>chunk(10)
+                .reader(customerReader())
                 .writer(
                         list -> {
-                            for (String curItem : list) {
-                                System.out.println(curItem);
+                            for (Customer customer : list) {
+                                System.out.println(customer.toString());
                             }
                         }
                 )
@@ -88,8 +52,9 @@ public class JobConfiguration {
 
     @Bean
     public Job helloJob () {
-        return jobBuilderFactory.get("test-batch")
+        return jobBuilderFactory.get("item-reader-database-3")
                 .start(itemReaderStep())
                 .build();
     }
+
 }
