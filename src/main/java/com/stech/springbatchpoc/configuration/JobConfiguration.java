@@ -9,6 +9,7 @@ import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
+import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,6 +30,7 @@ public class JobConfiguration {
     private CustomerRepository customerRepository;
 
     @Bean
+    @StepScope
     public CustomerReader customerReader () {
         List<Customer> customers = customerRepository.findAll().subList(0, 10);
         return new CustomerReader(customers);
@@ -38,7 +40,7 @@ public class JobConfiguration {
     @Bean
     public Step itemReaderStep () {
         return stepBuilderFactory.get("itemReaderStep")
-                .<Customer, Customer>chunk(10)
+                .<Customer, Customer>chunk(1)
                 .reader(customerReader())
                 .writer(
                         list -> {
@@ -47,12 +49,13 @@ public class JobConfiguration {
                             }
                         }
                 )
+                .stream(customerReader())
                 .build();
     }
 
     @Bean
     public Job helloJob () {
-        return jobBuilderFactory.get("item-reader-database-3")
+        return jobBuilderFactory.get("item-reader-database-state-8")
                 .start(itemReaderStep())
                 .build();
     }
