@@ -21,12 +21,12 @@ public class CustomerReader implements ItemReader<Customer> {
     @Override
     public Customer read () throws Exception, UnexpectedInputException, ParseException, NonTransientResourceException {
         if (this.customers.hasNext()) {
-            try {
-                System.out.println("sleep");
-                Thread.sleep(1000);
-            } catch (Exception e) {
-                //
-            }
+//            try {
+//                System.out.println("sleep");
+//                Thread.sleep(500);
+//            } catch (Exception e) {
+//                //
+//            }
             return this.customers.next();
         }
         return null;

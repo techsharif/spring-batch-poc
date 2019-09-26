@@ -12,6 +12,7 @@ import org.springframework.batch.core.configuration.annotation.StepBuilderFactor
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.SimpleAsyncTaskExecutor;
 
 import java.util.List;
 
@@ -38,7 +39,7 @@ public class JobConfiguration {
     @Bean
     public Step itemReaderStep () {
         return stepBuilderFactory.get("itemReaderStep")
-                .<Customer, Customer>chunk(10)
+                .<Customer, Customer>chunk(2)
                 .reader(customerReader())
                 .writer(
                         list -> {
@@ -47,12 +48,13 @@ public class JobConfiguration {
                             }
                         }
                 )
+                .taskExecutor(new SimpleAsyncTaskExecutor())
                 .build();
     }
 
     @Bean
     public Job helloJob () {
-        return jobBuilderFactory.get("item-reader-database-3")
+        return jobBuilderFactory.get("item-reader-database-7")
                 .start(itemReaderStep())
                 .build();
     }
