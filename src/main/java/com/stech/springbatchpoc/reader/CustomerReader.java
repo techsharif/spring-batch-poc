@@ -3,31 +3,29 @@ package com.stech.springbatchpoc.reader;
 
 import com.stech.springbatchpoc.entity.Customer;
 import org.springframework.batch.item.ItemReader;
-import org.springframework.batch.item.NonTransientResourceException;
-import org.springframework.batch.item.ParseException;
-import org.springframework.batch.item.UnexpectedInputException;
 
-import java.util.Iterator;
 import java.util.List;
 
 public class CustomerReader implements ItemReader<Customer> {
-    private final Iterator<Customer> customers;
+    private int customerIndex;
+    private List<Customer> customers;
 
     public CustomerReader (List<Customer> customers) {
-        this.customers = customers.iterator();
+        customerIndex = 0;
+        this.customers = customers;
     }
 
 
     @Override
-    public Customer read () throws Exception, UnexpectedInputException, ParseException, NonTransientResourceException {
-        if (this.customers.hasNext()) {
+    public Customer read () {
+        if (customerIndex < this.customers.size()) {
             try {
                 System.out.println("sleep");
-                Thread.sleep(1000);
+                Thread.sleep(200);
             } catch (Exception e) {
                 //
             }
-            return this.customers.next();
+            return this.customers.get(this.customerIndex++);
         }
         return null;
     }
